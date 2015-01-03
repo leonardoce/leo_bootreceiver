@@ -22,6 +22,7 @@ public class LeoBootreceiverModule extends KrollModule
 	// Standard Debugging variables
 	private static final String LCAT = "LeoBootreceiverModule";
 	private static final boolean DBG = TiConfig.LOGD;
+	private static final long MILLIS_IN_DAY = 1000*60*60*24;
 
 	// You can define constants with @Kroll.constant, for example:
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
@@ -88,7 +89,22 @@ public class LeoBootreceiverModule extends KrollModule
 		cal.add(Calendar.MINUTE, minuti);
 		cal.add(Calendar.SECOND, 0);
 
-		alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), 1000*60*60*24, pendingIntent);
+		// Controllo per non farlo suonare immediatamente
+		long delta = 0;
+		if(cal.getTimeInMillis()<System.currentTimeMillis()) {
+			Log.d(LCAT, "Questo allarme e' gia' passato. Schedulo a partire da domani.");
+			delta = MILLIS_IN_DAY;
+		}
+
+		alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis() + delta, MILLIS_IN_DAY, pendingIntent);
+	}
+
+	@Kroll.method
+	public void interrompiSuoneria() 
+	{
+		Log.d(LCAT, "Interrompo la suoneria...");
+        Intent playAlarm = new Intent(getContext(), AlarmKlaxon.class);
+        getContext().stopService(playAlarm);
 	}
 
 	/**

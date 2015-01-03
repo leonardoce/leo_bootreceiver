@@ -1,9 +1,3 @@
-/**
- * benCoding.AlarmManager Project
- * Copyright (c) 2009-2012 by Ben Bahrenburg. All Rights Reserved.
- * Licensed under the terms of the Apache Public License
- * Please see the LICENSE included with this distribution for details.
- */
 package it.interfree.leonardoce.bootreceiver;
 
 import org.appcelerator.titanium.TiApplication;
