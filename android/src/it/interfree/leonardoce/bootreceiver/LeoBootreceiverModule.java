@@ -62,12 +62,12 @@ public class LeoBootreceiverModule extends KrollModule
 	}
 
 	@Kroll.method
-	public void clearAllAlarms() {
-		Log.d(LCAT, "Cancellazione di tutti gli allarmi");
+	public void clearAlarm(int idTerapia) {
+		Log.d(LCAT, "Cancellazione dell'allarme per la terapia ["+idTerapia+"]");
 
 		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), idTerapia, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		alarmManager.cancel (pendingIntent);
 	}
@@ -78,7 +78,7 @@ public class LeoBootreceiverModule extends KrollModule
 
 		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
-		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), idTerapia, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		Calendar defaultDay = Calendar.getInstance();
 		int day = defaultDay.get(Calendar.DAY_OF_MONTH);
