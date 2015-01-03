@@ -24,6 +24,10 @@ public class LeoBootreceiverModule extends KrollModule
 	private static final boolean DBG = TiConfig.LOGD;
 	private static final long MILLIS_IN_DAY = 1000*60*60*24;
 
+	// Questo ID di terapia (fittizio) serve per distinguere l'allarme
+	// derivato da una ripetizione di un allarme gia' dato.
+	private static final int ID_PER_RIPETIZIONE = 54321;
+
 	// You can define constants with @Kroll.constant, for example:
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
 
@@ -105,6 +109,23 @@ public class LeoBootreceiverModule extends KrollModule
 		Log.d(LCAT, "Interrompo la suoneria...");
         Intent playAlarm = new Intent(getContext(), AlarmKlaxon.class);
         getContext().stopService(playAlarm);
+	}
+
+	@Kroll.method
+	public void ripetiAllarmeFraMinuti(int minuti){
+		Log.d(LCAT, "Aggiungi un allarme per ripetizione in ["+minuti+"] minuti");
+
+		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
+		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
+		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), ID_PER_RIPETIZIONE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		Calendar cal = new GregorianCalendar();
+		alarmManager.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis() + minuti * 60 * 1000, pendingIntent);
+	}
+
+	@Kroll.method
+	public void cancellaAllarmePerRipetizione() {
+		clearAlarm(ID_PER_RIPETIZIONE);
 	}
 
 	/**
