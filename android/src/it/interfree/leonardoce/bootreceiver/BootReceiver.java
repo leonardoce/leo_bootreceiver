@@ -10,6 +10,9 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 
+import org.appcelerator.titanium.TiApplication;
+import org.appcelerator.kroll.common.Log;
+
 /**
  * Questo serve per lanciare direttamente un servizio
  * al boot del cellulare
@@ -17,40 +20,24 @@ import android.content.pm.PackageManager.NameNotFoundException;
  *
  */
 public class BootReceiver extends BroadcastReceiver {
+    private static final String LCAT = BootReceiver.class.getName();
+
 	@Override
     public void onReceive(Context context, Intent intent) {
-		final int interval_sec;
-		final String class_name;
-		
-    	try {
-			ActivityInfo ai = context.getPackageManager().getReceiverInfo(new ComponentName(context, BootReceiver.class.getName()), PackageManager.GET_META_DATA);
-			interval_sec = ai.metaData.getInt("interval_sec");
-			class_name = ai.metaData.getString("class_name");
-		} catch (NameNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
-    	
-    	Log.i(BootReceiver.class.getName(), "Boot receiver bootstrap");
-    	
-    	if (interval_sec==0)
-    	{
-    		Log.e(BootReceiver.class.getName(), "Missing interval_sec metadata");
-    		return;
-    	}
-    	
-    	if (class_name==null || class_name.length()==0)
-    	{
-    		Log.e(BootReceiver.class.getName(), "Missing class_name metadata");
-    	}
-    	
-        try {
-            Class aClass = Class.forName(class_name);
-            Intent serviceIntent = new Intent(context, aClass);
-            serviceIntent.putExtra("interval", interval_sec * 1000L);//every second
-            context.startService(serviceIntent);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        Log.d(LCAT, "Attivazione del listener al boot...");
+
+        // Qua lancio il controllo al boot dell'applicazione.
+        // Vediamo cosa succede!
+        Intent intentApplicazione = new Intent();
+        intentApplicazione.setComponent(new ComponentName(TiApplication.getInstance().getApplicationContext().getPackageName(), 
+            "it.interfree.leonardoce.memofarma.MemofarmaActivity"));
+        intentApplicazione.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK | 
+            Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | 
+            Intent.FLAG_ACTIVITY_SINGLE_TOP |
+            Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+        intentApplicazione.addCategory(Intent.CATEGORY_LAUNCHER);
+        intentApplicazione.putExtra("tipologia", "controllo_al_boot");
+        context.startActivity(intentApplicazione);
     }
 }
