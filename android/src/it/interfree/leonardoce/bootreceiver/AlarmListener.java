@@ -21,5 +21,10 @@ public class AlarmListener  extends BroadcastReceiver {
 	@Override 
 	public void onReceive(Context context, Intent intent) {
 		Log.d(LTAG, "Ricevo l'allarme");
+
+        // Play the alarm alert and vibrate the device.
+        Log.d(LTAG, "Attivo il servizio...");
+        Intent playAlarm = new Intent(context, AlarmKlaxon.class);
+        context.startService(playAlarm);
 	}
 }
