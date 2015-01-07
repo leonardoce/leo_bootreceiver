@@ -38,6 +38,18 @@ public class AlarmKlaxon extends Service {
     private long mStartTime;
     private int mInitialCallState;
 
+    private static final int KILLER = 1000;
+    private Handler mHandler = new Handler() {
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case KILLER:
+                    Log.v(LTAG, "*********** Alarm killer triggered ***********");
+                    stopSelf();
+                    break;
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         mVibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
@@ -110,6 +122,7 @@ public class AlarmKlaxon extends Service {
         mVibrator.vibrate(sVibratePattern, 0);
         mPlaying = true;
         mStartTime = System.currentTimeMillis();
+        enableKiller();
     }
 
     // Do the common stuff when starting the alarm.
@@ -156,5 +169,22 @@ public class AlarmKlaxon extends Service {
             // Stop vibrator
             mVibrator.cancel();
         }
+        disableKiller();
+    }
+
+    /**
+     * Kills alarm audio after ALARM_TIMEOUT_SECONDS, so the alarm
+     * won't run all day.
+     *
+     * This just cancels the audio, but leaves the notification
+     * popped, so the user will know that the alarm tripped.
+     */
+    private void enableKiller() {
+        mHandler.sendMessageDelayed(mHandler.obtainMessage(KILLER),
+                1000 * ALARM_TIMEOUT_SECONDS);
+    }
+
+    private void disableKiller() {
+        mHandler.removeMessages(KILLER);
     }
 }
