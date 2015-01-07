@@ -69,38 +69,35 @@ public class LeoBootreceiverModule extends KrollModule
 	public void clearAlarm(int idTerapia) {
 		Log.d(LCAT, "Cancellazione dell'allarme per la terapia ["+idTerapia+"]");
 
-		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), idTerapia, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		alarmManager.cancel (pendingIntent);
+		getAlarmManager().cancel (pendingIntent);
 	}
 
 	@Kroll.method
-	public void addAlarm(int ore, int minuti, int idTerapia) {
-		Log.d(LCAT, "Aggiungo allarme alle [" + ore + ":" + minuti +"] per [" + idTerapia + "]");
+	public void addAlarmOggi(int ore, int minuti, int idTerapia) {
+		Log.d(LCAT, "Aggiungo allarme OGGI alle [" + ore + ":" + minuti +"] per [" + idTerapia + "]");
+		addAlarm(ore, minuti, idTerapia, 0);
+	}
 
-		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
+	@Kroll.method
+	public void addAlarmDomani(int ore, int minuti, int idTerapia) {
+		Log.d(LCAT, "Aggiungo allarme DOMANI alle [" + ore + ":" + minuti +"] per [" + idTerapia + "]");
+		addAlarm(ore, minuti, idTerapia, MILLIS_IN_DAY);
+	}
+
+	private void addAlarm(int ore, int minuti, int idTerapia, long delta) {
 		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), idTerapia, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		Calendar defaultDay = Calendar.getInstance();
-		int day = defaultDay.get(Calendar.DAY_OF_MONTH);
-		int month = defaultDay.get(Calendar.MONTH);
-		int year = defaultDay.get(Calendar.YEAR);
-		Calendar cal =  new GregorianCalendar(year, month, day);
-		cal.add(Calendar.HOUR_OF_DAY, ore);
-		cal.add(Calendar.MINUTE, minuti);
-		cal.add(Calendar.SECOND, 0);
-
-		// Controllo per non farlo suonare immediatamente
-		long delta = 0;
-		if(cal.getTimeInMillis()<System.currentTimeMillis()) {
+		long tempoBase = generaTimestamp(ore, minuti) + delta;
+		if(tempoBase<System.currentTimeMillis()) {
 			Log.d(LCAT, "Questo allarme e' gia' passato. Schedulo a partire da domani.");
-			delta = MILLIS_IN_DAY;
+			tempoBase += MILLIS_IN_DAY;
 		}
 
-		alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis() + delta, MILLIS_IN_DAY, pendingIntent);
+		getAlarmManager().setRepeating(AlarmManager.RTC_WAKEUP, tempoBase, MILLIS_IN_DAY, pendingIntent);
 	}
 
 	@Kroll.method
@@ -115,12 +112,11 @@ public class LeoBootreceiverModule extends KrollModule
 	public void ripetiAllarmeFraMinuti(int minuti){
 		Log.d(LCAT, "Aggiungi un allarme per ripetizione in ["+minuti+"] minuti");
 
-		AlarmManager alarmManager = (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
 		Intent intent = new Intent(TiApplication.getInstance().getApplicationContext(), AlarmListener.class);
 		PendingIntent pendingIntent = PendingIntent.getBroadcast(getContext(), ID_PER_RIPETIZIONE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		Calendar cal = new GregorianCalendar();
-		alarmManager.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis() + minuti * 60 * 1000, pendingIntent);
+		getAlarmManager().set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis() + minuti * 60 * 1000, pendingIntent);
 	}
 
 	@Kroll.method
@@ -133,6 +129,29 @@ public class LeoBootreceiverModule extends KrollModule
 	 */
 	private Context getContext() {
 		return TiApplication.getInstance().getApplicationContext();
+	}
+
+	/**
+ 	 * Prende il gestore degli allarmi di questa applicazione
+ 	 */
+	private AlarmManager getAlarmManager() {
+		return (AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
+	}
+
+	/**
+	 * Genera il timestamp corrispondente alla giornata di oggi alle ore e minuti specificati
+	 */
+	private long generaTimestamp(int ore, int minuti) {
+		Calendar defaultDay = Calendar.getInstance();
+		int day = defaultDay.get(Calendar.DAY_OF_MONTH);
+		int month = defaultDay.get(Calendar.MONTH);
+		int year = defaultDay.get(Calendar.YEAR);
+		Calendar cal =  new GregorianCalendar(year, month, day);
+		cal.add(Calendar.HOUR_OF_DAY, ore);
+		cal.add(Calendar.MINUTE, minuti);
+		cal.add(Calendar.SECOND, 0);
+
+		return cal.getTimeInMillis();
 	}
 }
 
