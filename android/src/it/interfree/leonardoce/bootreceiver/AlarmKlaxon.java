@@ -15,7 +15,10 @@
 
 package it.interfree.leonardoce.bootreceiver;
 
+import android.app.NotificationManager;
 import android.app.Service;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
@@ -32,18 +35,24 @@ import android.os.Message;
 import android.os.Vibrator;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+
 import org.appcelerator.kroll.common.Log;
+import org.appcelerator.titanium.TiApplication;
+
+import android.support.v4.app.NotificationCompat;
 
 /**
  * Manages alarms and vibe. Runs as a service so that it can continue to play
  * if another activity overrides the AlarmAlert dialog.
  */
 public class AlarmKlaxon extends Service {
+    private static final int NOTIFICATION_ID=11221;
+    
     private static final boolean LOGV = true;
     private static final String LTAG = AlarmKlaxon.class.getName();
 
     /** Play alarm up to 10 minutes before silencing */
-    private static final int ALARM_TIMEOUT_SECONDS = 10 * 60;
+    private static final int ALARM_TIMEOUT_SECONDS = 1 * 60;
 
     private static final long[] sVibratePattern = new long[] { 500, 500 };
 
@@ -59,6 +68,35 @@ public class AlarmKlaxon extends Service {
             switch (msg.what) {
                 case KILLER:
                     Log.v(LTAG, "*********** Alarm killer triggered ***********");
+                    
+                    // Here we create a notification to let the user know, when he will
+                    // take the phone, that he must take the pill
+
+                    Intent intentApplicazione = new Intent();
+                    intentApplicazione.setComponent(new ComponentName(TiApplication.getInstance().getApplicationContext().getPackageName(), 
+                                                                      "it.interfree.leonardoce.memofarma.MemofarmaActivity"));
+                    intentApplicazione.addFlags(
+                                                Intent.FLAG_ACTIVITY_NEW_TASK | 
+                                                Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED | 
+                                                Intent.FLAG_ACTIVITY_SINGLE_TOP |
+                                                Intent.FLAG_ACTIVITY_NO_USER_ACTION);
+                    intentApplicazione.addCategory(Intent.CATEGORY_LAUNCHER);
+                    intentApplicazione.putExtra("tipologia", "terapie_non_somministrate");
+
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(AlarmKlaxon.this, 0, intentApplicazione,
+                                                                             PendingIntent.FLAG_UPDATE_CURRENT);
+                    
+                    NotificationCompat.Builder mBuilder =
+                        new NotificationCompat.Builder(AlarmKlaxon.this)
+                        .setContentTitle("MemoFarma")
+                        .setSmallIcon(android.R.drawable.stat_notify_more)
+                        .setContentText("Alarm!")
+                        .setContentIntent(pendingIntent);
+                    
+                    NotificationManager mNotificationManager =
+                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                    mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+                    
                     stopSelf();
                     break;
             }
@@ -147,7 +185,8 @@ public class AlarmKlaxon extends Service {
         final AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
         // do not play alarms if stream volume is 0
         // (typically because ringer mode is silent).
-        if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0) {
+        if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0
+            && audioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT) {
             player.setAudioStreamType(AudioManager.STREAM_ALARM);
             player.setLooping(true);
             player.prepare();
