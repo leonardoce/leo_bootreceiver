@@ -184,10 +184,15 @@ public class AlarmKlaxon extends Service {
             throws java.io.IOException, IllegalArgumentException,
                    IllegalStateException {
         final AudioManager audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+
+	// Non deve suonare se il cellulare e' silenzioso
+	Log.v(LTAG, "Stato del telefono: " + audioManager.getRingerMode());
+	
         // do not play alarms if stream volume is 0
         // (typically because ringer mode is silent).
         if (audioManager.getStreamVolume(AudioManager.STREAM_ALARM) != 0
-            && audioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT) {
+            && audioManager.getRingerMode() != AudioManager.RINGER_MODE_SILENT
+	    && audioManager.getRingerMode() != AudioManager.RINGER_MODE_VIBRATE) {
             player.setAudioStreamType(AudioManager.STREAM_ALARM);
             player.setLooping(true);
             player.prepare();
