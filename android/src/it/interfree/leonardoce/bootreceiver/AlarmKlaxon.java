@@ -83,15 +83,16 @@ public class AlarmKlaxon extends Service {
                     intentApplicazione.addCategory(Intent.CATEGORY_LAUNCHER);
                     intentApplicazione.putExtra("tipologia", "terapie_non_somministrate");
 
-                    PendingIntent pendingIntent = PendingIntent.getBroadcast(AlarmKlaxon.this, 0, intentApplicazione,
-                                                                             PendingIntent.FLAG_UPDATE_CURRENT);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(AlarmKlaxon.this, 0, intentApplicazione,
+									    PendingIntent.FLAG_UPDATE_CURRENT);
                     
                     NotificationCompat.Builder mBuilder =
                         new NotificationCompat.Builder(AlarmKlaxon.this)
                         .setContentTitle("MemoFarma")
                         .setSmallIcon(android.R.drawable.stat_notify_more)
                         .setContentText("Alarm!")
-                        .setContentIntent(pendingIntent);
+                        .setContentIntent(pendingIntent)
+			.setAutoCancel(true);
                     
                     NotificationManager mNotificationManager =
                         (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
