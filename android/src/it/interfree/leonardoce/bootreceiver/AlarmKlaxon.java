@@ -52,7 +52,7 @@ public class AlarmKlaxon extends Service {
     private static final String LTAG = AlarmKlaxon.class.getName();
 
     /** Play alarm up to 10 minutes before silencing */
-    private static final int ALARM_TIMEOUT_SECONDS = 1 * 60;
+    private static final int ALARM_TIMEOUT_SECONDS = 15 * 60;
 
     private static final long[] sVibratePattern = new long[] { 500, 500 };
 
